@@ -834,19 +834,19 @@ function init() {
     btn.addEventListener('click', () => toggleCategory(btn.dataset.cat));
   });
 
-  document.getElementById('dc1Name').addEventListener('input', e => { state.dc1 = e.target.value || 'Primary Data Center'; renderAll(); });
-  document.getElementById('dc2Name').addEventListener('input', e => { state.dc2 = e.target.value || 'DR Data Center'; renderAll(); });
+  document.getElementById('dc1Name').addEventListener('change', e => { state.dc1 = e.target.value || 'Primary Data Center'; renderAll(); });
+  document.getElementById('dc2Name').addEventListener('change', e => { state.dc2 = e.target.value || 'DR Data Center'; renderAll(); });
   document.getElementById('replicationToggle').addEventListener('click', () => {
     state.replicationEnabled = !state.replicationEnabled;
     document.getElementById('replicationToggle').classList.toggle('on', state.replicationEnabled);
     renderAll();
   });
 
-  document.getElementById('freqInput').addEventListener('input', e => { state.frequency = +e.target.value || 1; renderAll(); });
-  document.getElementById('retentionInput').addEventListener('input', e => { state.retentionWeeks = +e.target.value || 1; renderAll(); });
-  document.getElementById('replRetentionInput').addEventListener('input', e => { state.replRetentionWeeks = +e.target.value || 1; renderAll(); });
-  document.getElementById('nodeSizeInput').addEventListener('input', e => { state.nodeSize = +e.target.value || 150; renderAll(); });
-  document.getElementById('headroomInput').addEventListener('input', e => { state.headroom = +e.target.value || 0; renderAll(); });
+  document.getElementById('freqInput').addEventListener('change', e => { state.frequency = +e.target.value || 1; renderAll(); });
+  document.getElementById('retentionInput').addEventListener('change', e => { state.retentionWeeks = +e.target.value || 1; renderAll(); });
+  document.getElementById('replRetentionInput').addEventListener('change', e => { state.replRetentionWeeks = +e.target.value || 1; renderAll(); });
+  document.getElementById('nodeSizeInput').addEventListener('change', e => { state.nodeSize = +e.target.value || 150; renderAll(); });
+  document.getElementById('headroomInput').addEventListener('change', e => { state.headroom = +e.target.value || 0; renderAll(); });
 
   buildWorkloadPanels();
   renderAll();
@@ -1018,13 +1018,20 @@ function renderConfigured() {
   }).join('');
 
   rows.querySelectorAll('.num-input').forEach(inp => {
-    inp.addEventListener('input', e => {
+    // Use 'change' so calculations only fire on blur or Enter keypress,
+    // not on every keystroke. This prevents the row re-render from
+    // stealing focus while the user is mid-typing a multi-digit number.
+    inp.addEventListener('change', e => {
       const id = e.target.closest('.config-row').dataset.id;
       const field = e.target.dataset.field;
       const w = state.selectedWorkloads.get(id);
       if (!w) return;
       w[field] = +e.target.value || 0;
       renderAll();
+    });
+    // Commit on Enter key for faster workflow
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Enter') e.target.blur();
     });
   });
   rows.querySelectorAll('.select-input').forEach(sel => {
@@ -1308,7 +1315,7 @@ function dcGroup(x, y, w, h, kind, name, label, nodes, storedTB, workloads, isSo
   // Workload source chips inside DC (top region)
   let chipsSvg = '';
   if (isSource && workloads.length > 0) {
-    const chipH = 24, chipGap = 6;
+    const chipH = 36, chipGap = 6;
     const chipsPerRow = 3;
     const chipAreaW = w - 40;
     const chipW = (chipAreaW - (chipsPerRow - 1) * chipGap) / chipsPerRow;
@@ -1318,12 +1325,16 @@ function dcGroup(x, y, w, h, kind, name, label, nodes, storedTB, workloads, isSo
       const col = i % chipsPerRow;
       const cx2 = x + 20 + col * (chipW + chipGap);
       const cy2 = y + 64 + row * (chipH + chipGap);
-      const displayName = wl.name.length > 26 ? wl.name.substring(0,24) + '…' : wl.name;
+      // Format capacity value without double-unit ("10 TB FETB" looks weird)
+      const capSuffix = `(${formatTB(wl.capacity)})`;
+      const maxNameLen = 22;
+      const displayName = wl.name.length > maxNameLen ? wl.name.substring(0, maxNameLen - 1) + '…' : wl.name;
       chipsSvg += `
         <g>
           <rect x="${cx2}" y="${cy2}" width="${chipW}" height="${chipH}" rx="3" fill="#151b21" stroke="#2d373f"/>
-          <circle cx="${cx2 + 10}" cy="${cy2 + chipH/2}" r="3" fill="#00b388"/>
-          <text x="${cx2 + 20}" y="${cy2 + chipH/2 + 4}" class="wl-chip-text">${escapeSvg(displayName)}</text>
+          <circle cx="${cx2 + 10}" cy="${cy2 + 14}" r="3" fill="#00b388"/>
+          <text x="${cx2 + 20}" y="${cy2 + 17}" class="wl-chip-text">${escapeSvg(displayName)}</text>
+          <text x="${cx2 + 20}" y="${cy2 + 30}" class="wl-chip-text" style="fill:#00b388; font-family:'JetBrains Mono',monospace; font-size:9px; letter-spacing:.5px;">${escapeSvg(capSuffix.trim())}</text>
         </g>
       `;
     });
@@ -1344,7 +1355,7 @@ function dcGroup(x, y, w, h, kind, name, label, nodes, storedTB, workloads, isSo
   // Connector from workload region to RSV cluster
   let innerConnector = '';
   if (isSource && workloads.length > 0 && nodeCount > 0) {
-    innerConnector = `<path d="M${x + w/2} ${y + 180} L${x + w/2} ${clusterY - 6}" class="connector active" marker-end="url(#arrow-accent)"/>`;
+    innerConnector = `<path d="M${x + w/2} ${y + 202} L${x + w/2} ${clusterY - 6}" class="connector active" marker-end="url(#arrow-accent)"/>`;
   }
 
   // HTTPS 443 outbound from RSV cluster UP to RSC
@@ -1380,6 +1391,13 @@ function dcGroup(x, y, w, h, kind, name, label, nodes, storedTB, workloads, isSo
 
 function escapeSvg(s) { return String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[c]); }
 function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
+function formatTB(n) {
+  if (!n || n <= 0) return '0 TB';
+  if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + ' PB';
+  if (n >= 100) return Math.round(n) + ' TB';
+  if (n >= 10) return n.toFixed(1).replace(/\.0$/, '') + ' TB';
+  return n.toFixed(2).replace(/\.?0+$/, '') + ' TB';
+}
 
 // ============================================================
 // EXPORT
