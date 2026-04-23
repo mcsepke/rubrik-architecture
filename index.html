@@ -1,0 +1,1430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Rubrik Security Cloud — Sizing Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Instrument+Serif&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-0: #0a0d10;
+    --bg-1: #0f1418;
+    --bg-2: #151b21;
+    --bg-3: #1c242c;
+    --line: #232b33;
+    --line-2: #2d373f;
+    --text-0: #e8ecef;
+    --text-1: #aab3ba;
+    --text-2: #6b747c;
+    --text-3: #4a5159;
+    --accent: #00b388;
+    --accent-soft: rgba(0,179,136,0.12);
+    --accent-bright: #1ad6a5;
+    --warn: #f5a524;
+    --danger: #e5484d;
+    --blue: #4a9eff;
+    --purple: #a78bfa;
+    --pink: #ec4899;
+    --shadow-glow: 0 0 24px rgba(0,179,136,.18);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg-0); color: var(--text-0); font-family: 'Geist', system-ui, sans-serif; font-weight: 400; -webkit-font-smoothing: antialiased; }
+  body {
+    min-height: 100vh;
+    background:
+      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(0,179,136,0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at top, #11171c 0%, var(--bg-0) 50%);
+  }
+  button { font-family: inherit; color: inherit; background: none; border: none; cursor: pointer; }
+  input, select { font-family: inherit; color: inherit; }
+  input:focus, select:focus { outline: none; }
+
+  /* Header */
+  .header {
+    border-bottom: 1px solid var(--line);
+    padding: 16px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(15, 20, 24, 0.85);
+    position: sticky; top: 0; z-index: 100;
+    backdrop-filter: blur(14px);
+  }
+  .brand { display: flex; align-items: center; gap: 14px; }
+  .logo-mark {
+    width: 34px; height: 34px;
+    background: linear-gradient(135deg, var(--accent) 0%, #007a5c 100%);
+    border-radius: 7px;
+    display: grid; place-items: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700; color: #041f17; font-size: 16px;
+    box-shadow: var(--shadow-glow);
+  }
+  .brand-text h1 {
+    font-family: 'Instrument Serif', serif;
+    font-weight: 400; font-size: 20px; letter-spacing: .3px; line-height: 1;
+  }
+  .brand-text .sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; color: var(--text-2); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 3px;
+  }
+  .header-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-2);
+    letter-spacing: .5px;
+    display: flex; align-items: center; gap: 20px;
+  }
+  .header-meta .pulse {
+    display: inline-block;
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent); margin-right: 6px;
+    box-shadow: 0 0 8px var(--accent);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+  /* Layout */
+  .layout { display: grid; grid-template-columns: 1fr 420px; gap: 0; }
+  .main { padding: 28px 32px; min-width: 0; }
+  .sidebar {
+    border-left: 1px solid var(--line);
+    background: var(--bg-1);
+    position: sticky;
+    top: 67px;
+    height: calc(100vh - 67px);
+    overflow-y: auto;
+  }
+  .sidebar::-webkit-scrollbar { width: 6px; }
+  .sidebar::-webkit-scrollbar-track { background: transparent; }
+  .sidebar::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: 3px; }
+
+  /* Sections */
+  .section { margin-bottom: 36px; }
+  .section-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 18px; flex-wrap: wrap; }
+  .section-num {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    color: var(--accent); letter-spacing: 2px;
+  }
+  .section-title {
+    font-family: 'Instrument Serif', serif;
+    font-size: 24px; font-weight: 400; letter-spacing: .2px;
+  }
+  .section-desc {
+    color: var(--text-1); font-size: 12.5px; margin-left: auto;
+    max-width: 440px; text-align: right; line-height: 1.5;
+  }
+
+  /* Data Center Inputs */
+  .dc-section { background: var(--bg-1); border: 1px solid var(--line); border-radius: 8px; padding: 20px; }
+  .dc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .dc-card {
+    background: var(--bg-2); border: 1px solid var(--line); border-radius: 6px;
+    padding: 14px; position: relative;
+  }
+  .dc-card.source { border-left: 2px solid var(--accent); }
+  .dc-card.target { border-left: 2px solid var(--blue); }
+  .dc-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 9px;
+    color: var(--text-2); letter-spacing: 2px; text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .dc-input {
+    width: 100%; background: transparent; border: none; color: var(--text-0);
+    font-size: 15px; font-weight: 500; padding: 2px 0;
+    border-bottom: 1px solid var(--line-2);
+    transition: border-color .2s;
+  }
+  .dc-input:focus { border-color: var(--accent); }
+  .dc-input::placeholder { color: var(--text-3); }
+  .dc-toggle {
+    margin-top: 12px; display: flex; align-items: center; gap: 10px;
+    font-size: 12px; color: var(--text-1);
+  }
+  .switch {
+    width: 32px; height: 18px; background: var(--bg-3); border-radius: 18px;
+    position: relative; cursor: pointer; transition: background .2s;
+    border: 1px solid var(--line-2);
+  }
+  .switch::after {
+    content: ''; position: absolute; top: 1px; left: 1px;
+    width: 14px; height: 14px; border-radius: 50%; background: var(--text-2);
+    transition: transform .2s, background .2s;
+  }
+  .switch.on { background: var(--accent-soft); border-color: var(--accent); }
+  .switch.on::after { transform: translateX(14px); background: var(--accent); }
+
+  /* Workload Category Buttons */
+  .category-bar {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+    margin-bottom: 24px;
+  }
+  .cat-btn {
+    background: var(--bg-1); border: 1px solid var(--line);
+    border-radius: 8px; padding: 18px 16px; text-align: left;
+    transition: all .2s; position: relative; overflow: hidden;
+  }
+  .cat-btn::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(135deg, transparent 0%, rgba(0,179,136,0.06) 100%);
+    opacity: 0; transition: opacity .2s;
+  }
+  .cat-btn:hover { border-color: var(--line-2); transform: translateY(-1px); }
+  .cat-btn:hover::before { opacity: 1; }
+  .cat-btn.active {
+    border-color: var(--accent); background: var(--bg-2);
+    box-shadow: 0 0 0 1px var(--accent), 0 4px 20px rgba(0,179,136,0.15);
+  }
+  .cat-btn.active::before { opacity: 1; }
+  .cat-btn .cat-icon {
+    width: 28px; height: 28px; margin-bottom: 10px;
+    color: var(--text-1); transition: color .2s;
+  }
+  .cat-btn.active .cat-icon { color: var(--accent); }
+  .cat-btn .cat-label {
+    font-size: 15px; font-weight: 500; letter-spacing: -0.01em;
+    margin-bottom: 3px;
+  }
+  .cat-btn .cat-count {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    color: var(--text-2); letter-spacing: 1px;
+  }
+  .cat-btn.active .cat-count { color: var(--accent); }
+
+  /* Workload Panels */
+  .workload-panels { display: none; }
+  .workload-panels.visible { display: block; }
+  .workload-panel {
+    background: var(--bg-1); border: 1px solid var(--line);
+    border-radius: 8px; margin-bottom: 14px; overflow: hidden;
+    display: none;
+  }
+  .workload-panel.visible { display: block; }
+  .panel-header {
+    padding: 14px 18px; background: var(--bg-2);
+    border-bottom: 1px solid var(--line);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .panel-header .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent);
+  }
+  .panel-header .title {
+    font-size: 13px; font-weight: 500; letter-spacing: .3px;
+  }
+  .panel-header .count {
+    margin-left: auto; font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; color: var(--text-2); letter-spacing: 1px;
+  }
+
+  .workload-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1px; background: var(--line);
+  }
+  .wl-item {
+    background: var(--bg-1); padding: 12px 14px;
+    display: flex; align-items: center; gap: 10px;
+    cursor: pointer; transition: background .15s;
+    font-size: 12.5px; color: var(--text-1);
+    min-height: 44px;
+  }
+  .wl-item:hover { background: var(--bg-2); color: var(--text-0); }
+  .wl-item.selected { background: var(--bg-2); color: var(--text-0); }
+  .wl-item.selected::before {
+    content: ''; display: block; width: 2px; align-self: stretch;
+    background: var(--accent); margin: -12px 0 -12px -14px; margin-right: 2px;
+  }
+  .wl-checkbox {
+    width: 14px; height: 14px; border: 1px solid var(--line-2); border-radius: 3px;
+    display: grid; place-items: center; flex-shrink: 0;
+    transition: all .15s;
+  }
+  .wl-item.selected .wl-checkbox { background: var(--accent); border-color: var(--accent); }
+  .wl-checkbox svg { opacity: 0; transition: opacity .15s; }
+  .wl-item.selected .wl-checkbox svg { opacity: 1; }
+
+  /* Configured Workloads Table */
+  .config-section {
+    background: var(--bg-1); border: 1px solid var(--line); border-radius: 8px;
+    overflow: hidden; margin-bottom: 24px;
+  }
+  .config-header {
+    padding: 14px 20px; border-bottom: 1px solid var(--line);
+    display: flex; align-items: center; gap: 12px;
+    background: var(--bg-2);
+  }
+  .config-header .title { font-size: 13px; font-weight: 500; letter-spacing: .3px; }
+  .config-header .pill {
+    margin-left: auto; font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; color: var(--accent); letter-spacing: 1px;
+    background: var(--accent-soft); padding: 3px 8px; border-radius: 3px;
+  }
+
+  .config-row {
+    padding: 14px 20px; border-bottom: 1px solid var(--line);
+    display: grid; grid-template-columns: 1.6fr 0.8fr 0.9fr 0.9fr 0.9fr 0.8fr 1fr 0.9fr 32px;
+    gap: 10px; align-items: center;
+  }
+  .config-row:last-child { border-bottom: none; }
+  .config-row .wl-name {
+    font-size: 12.5px; font-weight: 500;
+    display: flex; align-items: center; gap: 8px; min-width: 0;
+  }
+  .config-row .wl-name .tag {
+    font-family: 'JetBrains Mono', monospace; font-size: 9px;
+    background: var(--bg-3); padding: 2px 5px; border-radius: 3px;
+    color: var(--text-2); letter-spacing: .5px;
+    flex-shrink: 0;
+  }
+  .config-row .wl-name .name {
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .config-header-row {
+    padding: 10px 20px;
+    background: var(--bg-2);
+    border-bottom: 1px solid var(--line);
+    display: grid; grid-template-columns: 1.6fr 0.8fr 0.9fr 0.9fr 0.9fr 0.8fr 1fr 0.9fr 32px;
+    gap: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; color: var(--text-2); letter-spacing: 1.3px; text-transform: uppercase;
+  }
+
+  .num-input {
+    width: 100%; background: var(--bg-2); border: 1px solid var(--line);
+    border-radius: 4px; padding: 6px 8px;
+    font-size: 12px; font-family: 'JetBrains Mono', monospace;
+    color: var(--text-0); text-align: right;
+    transition: all .15s;
+  }
+  .num-input:focus { border-color: var(--accent); background: var(--bg-1); }
+
+  .select-input {
+    width: 100%; background: var(--bg-2); border: 1px solid var(--line);
+    border-radius: 4px; padding: 6px 8px;
+    font-size: 11px; color: var(--text-0);
+    appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='6' viewBox='0 0 8 6'><path fill='%236b747c' d='M4 6L0 0h8z'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    padding-right: 22px;
+    cursor: pointer;
+  }
+  .select-input:disabled { color: var(--text-3); cursor: not-allowed; }
+  .remove-btn {
+    width: 22px; height: 22px; border-radius: 4px;
+    display: grid; place-items: center;
+    color: var(--text-2); transition: all .15s;
+  }
+  .remove-btn:hover { background: var(--bg-3); color: var(--danger); }
+
+  /* Global Policy */
+  .policy-grid {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px;
+  }
+  .policy-card {
+    background: var(--bg-2); border: 1px solid var(--line);
+    border-radius: 6px; padding: 14px;
+  }
+  .policy-card .label {
+    font-family: 'JetBrains Mono', monospace; font-size: 9px;
+    color: var(--text-2); letter-spacing: 1.5px; text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .policy-card .val-wrap {
+    display: flex; align-items: baseline; gap: 6px;
+  }
+  .big-input {
+    background: transparent; border: none; color: var(--text-0);
+    font-size: 22px; font-weight: 500; font-family: 'Geist', sans-serif;
+    width: 100%; padding: 0; letter-spacing: -0.02em;
+  }
+  .big-input::-webkit-outer-spin-button,
+  .big-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .big-input[type=number] { -moz-appearance: textfield; }
+  .unit { color: var(--text-2); font-size: 12px; font-family: 'JetBrains Mono', monospace; }
+
+  /* Visualization */
+  .viz-section { background: var(--bg-1); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .viz-header {
+    padding: 14px 20px; border-bottom: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--bg-2);
+  }
+  .viz-title { font-size: 13px; font-weight: 500; letter-spacing: .3px; }
+  .viz-toolbar { display: flex; gap: 6px; align-items: center; }
+  .tool-btn {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    color: var(--text-2); letter-spacing: 1px;
+    padding: 6px 12px; border-radius: 4px;
+    transition: all .15s; border: 1px solid var(--line);
+  }
+  .tool-btn:hover { background: var(--bg-3); color: var(--text-0); border-color: var(--line-2); }
+  .viz-canvas {
+    min-height: 560px; position: relative; overflow: auto;
+    background:
+      radial-gradient(circle at 20% 30%, rgba(0,179,136,0.04) 0%, transparent 45%),
+      radial-gradient(circle at 80% 70%, rgba(74,158,255,0.04) 0%, transparent 45%);
+  }
+  .viz-canvas svg { width: 100%; height: auto; display: block; }
+
+  /* Sidebar Stats */
+  .side-header {
+    padding: 18px 24px; border-bottom: 1px solid var(--line);
+    background: var(--bg-2);
+  }
+  .side-header .sh-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 9px;
+    color: var(--accent); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px;
+  }
+  .side-header .sh-title {
+    font-family: 'Instrument Serif', serif; font-size: 20px; line-height: 1.2;
+  }
+  .side-body { padding: 20px 24px; }
+  .metric {
+    padding: 14px 0; border-bottom: 1px solid var(--line);
+  }
+  .metric:last-child { border-bottom: none; padding-bottom: 0; }
+  .metric .m-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    color: var(--text-2); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 4px;
+  }
+  .metric .m-value {
+    font-size: 22px; font-weight: 500; letter-spacing: -0.02em;
+    display: flex; align-items: baseline; gap: 6px;
+  }
+  .metric .m-value .unit-small {
+    font-size: 11px; color: var(--text-2);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .metric .m-sub {
+    font-size: 11px; color: var(--text-2); margin-top: 4px;
+  }
+  .metric.highlight .m-value { color: var(--accent); }
+
+  .node-bar {
+    margin-top: 14px; padding: 14px;
+    background: linear-gradient(135deg, var(--accent-soft), transparent);
+    border: 1px solid var(--accent); border-radius: 6px;
+  }
+  .node-bar .nb-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    color: var(--accent); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 6px;
+  }
+  .node-bar .nb-value {
+    font-size: 26px; font-weight: 500; letter-spacing: -0.02em;
+  }
+  .node-bar .nb-breakdown {
+    margin-top: 10px; display: flex; gap: 12px; flex-wrap: wrap;
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    color: var(--text-2); letter-spacing: .5px;
+  }
+
+  /* Diagram elements */
+  .dc-rect { fill: var(--bg-2); stroke: var(--line-2); stroke-width: 1; }
+  .dc-rect.source { stroke: var(--accent); stroke-opacity: 0.5; }
+  .dc-rect.target { stroke: var(--blue); stroke-opacity: 0.5; }
+  .dc-title-text { font-family: 'Instrument Serif', serif; font-size: 18px; fill: var(--text-0); }
+  .dc-label-text { font-family: 'JetBrains Mono', monospace; font-size: 9px; fill: var(--text-2); letter-spacing: 1.5px; }
+  .node-rect { fill: var(--bg-3); stroke: var(--accent); stroke-width: 1.5; }
+  .node-text { font-family: 'Geist', sans-serif; font-size: 11px; fill: var(--text-0); font-weight: 500; }
+  .node-sub { font-family: 'JetBrains Mono', monospace; font-size: 9px; fill: var(--text-2); letter-spacing: .5px; }
+  .cloud-shape { fill: var(--bg-2); stroke: var(--purple); stroke-width: 1.5; }
+  .wl-chip-rect { fill: var(--bg-2); stroke: var(--line-2); stroke-width: 1; }
+  .wl-chip-text { font-family: 'Geist', sans-serif; font-size: 10px; fill: var(--text-0); }
+  .connector { stroke: var(--line-2); stroke-width: 1; fill: none; }
+  .connector.active { stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 3, 3; animation: dash 1.5s linear infinite; }
+  .connector.replication { stroke: var(--blue); stroke-width: 1.5; stroke-dasharray: 4, 4; animation: dash 2s linear infinite; }
+  .connector.cloud-direct { stroke: var(--purple); stroke-width: 1.5; stroke-dasharray: 3, 3; animation: dash 1.5s linear infinite; }
+  @keyframes dash { to { stroke-dashoffset: -12; } }
+  .conn-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 8.5px;
+    fill: var(--text-2); letter-spacing: .5px;
+  }
+
+  @media (max-width: 1200px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidebar { position: static; border-left: none; border-top: 1px solid var(--line); height: auto; }
+    .category-bar { grid-template-columns: repeat(2, 1fr); }
+    .config-row, .config-header-row { grid-template-columns: 1.2fr repeat(3, 1fr); }
+    .policy-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="brand">
+    <div class="logo-mark">R</div>
+    <div class="brand-text">
+      <h1>Rubrik Security Cloud</h1>
+      <div class="sub">Solution Sizing Workbench · v1.0</div>
+    </div>
+  </div>
+  <div class="header-meta">
+    <span><span class="pulse"></span>CONFIGURED</span>
+    <span id="headerWorkloadCount">0 WORKLOADS</span>
+    <span id="headerCapacity">0 TB FETB</span>
+  </div>
+</header>
+
+<div class="layout">
+  <main class="main">
+
+    <!-- DATA CENTERS -->
+    <section class="section">
+      <div class="section-head">
+        <span class="section-num">01</span>
+        <h2 class="section-title">Data Centers</h2>
+        <p class="section-desc">Name the sites where Rubrik Secure Vault clusters will be deployed. Toggle replication to define a DR pairing.</p>
+      </div>
+      <div class="dc-section">
+        <div class="dc-grid">
+          <div class="dc-card source">
+            <div class="dc-label">Site 01 · Source</div>
+            <input class="dc-input" id="dc1Name" type="text" placeholder="e.g., Chicago-DC1" value="Primary Data Center" />
+          </div>
+          <div class="dc-card target">
+            <div class="dc-label">Site 02 · Replication Target</div>
+            <input class="dc-input" id="dc2Name" type="text" placeholder="e.g., Dallas-DR" value="DR Data Center" />
+            <div class="dc-toggle">
+              <span class="switch on" id="replicationToggle"></span>
+              <span>Enable replication pairing</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- WORKLOAD CATEGORIES -->
+    <section class="section">
+      <div class="section-head">
+        <span class="section-num">02</span>
+        <h2 class="section-title">Workload Discovery</h2>
+        <p class="section-desc">Select categories, then pick individual workload types. Each selection opens a row for capacity, change rate, and reduction inputs.</p>
+      </div>
+
+      <div class="category-bar">
+        <button class="cat-btn" data-cat="onprem">
+          <svg class="cat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="16" rx="1"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="14" x2="21" y2="14"/><circle cx="6" cy="6.5" r=".5" fill="currentColor"/><circle cx="6" cy="11.5" r=".5" fill="currentColor"/><circle cx="6" cy="16.5" r=".5" fill="currentColor"/></svg>
+          <div class="cat-label">On-Prem</div>
+          <div class="cat-count">DATA CENTER · DB · STORAGE</div>
+        </button>
+        <button class="cat-btn" data-cat="cloud">
+          <svg class="cat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17.5 19a4.5 4.5 0 100-9h-1.05A7 7 0 103 14.5"/></svg>
+          <div class="cat-label">Cloud</div>
+          <div class="cat-count">AWS · AZURE · GCP · OCI</div>
+        </button>
+        <button class="cat-btn" data-cat="saas">
+          <svg class="cat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 10h10M7 14h6" stroke-linecap="round"/></svg>
+          <div class="cat-label">SaaS</div>
+          <div class="cat-count">M365 · SALESFORCE · JIRA</div>
+        </button>
+        <button class="cat-btn" data-cat="identity">
+          <svg class="cat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>
+          <div class="cat-label">Identity</div>
+          <div class="cat-count">AD · ENTRA ID · OKTA</div>
+        </button>
+      </div>
+
+      <div class="workload-panels" id="workloadPanels"></div>
+    </section>
+
+    <!-- CONFIGURED WORKLOADS -->
+    <section class="section" id="configuredSection" style="display:none;">
+      <div class="section-head">
+        <span class="section-num">03</span>
+        <h2 class="section-title">Configured Workloads</h2>
+        <p class="section-desc">Enter capacity, reduction ratio, daily change rate, and prod/non-prod split per workload. Stored TB is calculated live.</p>
+      </div>
+      <div class="config-section">
+        <div class="config-header">
+          <span style="width:6px; height:6px; border-radius:50%; background:var(--accent);"></span>
+          <span class="title">Per-Workload Sizing Inputs</span>
+          <span class="pill" id="configCount">0 SELECTED</span>
+        </div>
+        <div class="config-header-row">
+          <div>Workload</div>
+          <div style="text-align:right">Objects</div>
+          <div style="text-align:right">FETB</div>
+          <div style="text-align:right">Reduction ( :1 )</div>
+          <div style="text-align:right">Change %/day</div>
+          <div style="text-align:right">Prod %</div>
+          <div>Target</div>
+          <div style="text-align:right">Stored (TB)</div>
+          <div></div>
+        </div>
+        <div id="configuredRows"></div>
+      </div>
+    </section>
+
+    <!-- GLOBAL POLICY -->
+    <section class="section" id="policySection" style="display:none;">
+      <div class="section-head">
+        <span class="section-num">04</span>
+        <h2 class="section-title">Protection Policy</h2>
+        <p class="section-desc">Global backup frequency and retention. Uses one full + incremental-forever. Replication retention drives DR site sizing.</p>
+      </div>
+      <div class="policy-grid">
+        <div class="policy-card">
+          <div class="label">Backup Frequency</div>
+          <div class="val-wrap">
+            <input class="big-input" id="freqInput" type="number" value="1" min="1" step="1" />
+            <span class="unit">/ day</span>
+          </div>
+        </div>
+        <div class="policy-card">
+          <div class="label">Local Retention</div>
+          <div class="val-wrap">
+            <input class="big-input" id="retentionInput" type="number" value="4" min="1" step="1" />
+            <span class="unit">weeks</span>
+          </div>
+        </div>
+        <div class="policy-card">
+          <div class="label">Replication Retention</div>
+          <div class="val-wrap">
+            <input class="big-input" id="replRetentionInput" type="number" value="4" min="1" step="1" />
+            <span class="unit">weeks</span>
+          </div>
+        </div>
+        <div class="policy-card">
+          <div class="label">RSV Usable / Appliance</div>
+          <div class="val-wrap">
+            <input class="big-input" id="nodeSizeInput" type="number" value="150" min="1" step="1" />
+            <span class="unit">TB</span>
+          </div>
+        </div>
+        <div class="policy-card">
+          <div class="label">Headroom Buffer</div>
+          <div class="val-wrap">
+            <input class="big-input" id="headroomInput" type="number" value="20" min="0" max="50" step="1" />
+            <span class="unit">% free</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VISUALIZATION -->
+    <section class="section">
+      <div class="section-head">
+        <span class="section-num">05</span>
+        <h2 class="section-title">Solution Architecture</h2>
+        <p class="section-desc">Live diagram of Rubrik Security Cloud, Secure Vault clusters, workload sources, and replication topology.</p>
+      </div>
+      <div class="viz-section">
+        <div class="viz-header">
+          <span class="viz-title">RSC Topology · Auto-generated</span>
+          <div class="viz-toolbar">
+            <button class="tool-btn" onclick="exportSVG()">↓ EXPORT SVG</button>
+          </div>
+        </div>
+        <div class="viz-canvas" id="vizCanvas"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="side-header">
+      <div class="sh-label">Sizing Summary</div>
+      <div class="sh-title">Capacity &amp; Cluster</div>
+    </div>
+    <div class="side-body">
+      <div class="metric highlight">
+        <div class="m-label">Front-End TB Total</div>
+        <div class="m-value"><span id="statFetb">0</span><span class="unit-small">TB</span></div>
+        <div class="m-sub">Sum of raw workload capacity</div>
+      </div>
+      <div class="metric">
+        <div class="m-label">First Full (after reduction)</div>
+        <div class="m-value"><span id="statFirstFull">0</span><span class="unit-small">TB</span></div>
+        <div class="m-sub">FETB ÷ reduction ratio</div>
+      </div>
+      <div class="metric">
+        <div class="m-label">Incremental Growth</div>
+        <div class="m-value"><span id="statIncr">0</span><span class="unit-small">TB</span></div>
+        <div class="m-sub">Over <span id="statWeeks">4</span> weeks of retention</div>
+      </div>
+      <div class="metric">
+        <div class="m-label">Source Site Stored</div>
+        <div class="m-value"><span id="statSource">0</span><span class="unit-small">TB usable</span></div>
+        <div class="m-sub">Full + incrementals, RSV only</div>
+      </div>
+      <div class="metric">
+        <div class="m-label">Replicated (Prod)</div>
+        <div class="m-value"><span id="statRepl">0</span><span class="unit-small">TB usable</span></div>
+        <div class="m-sub">Prod workloads × repl retention</div>
+      </div>
+      <div class="metric">
+        <div class="m-label">Cloud Direct (Bypass RSV)</div>
+        <div class="m-value"><span id="statCloudDirect">0</span><span class="unit-small">TB</span></div>
+        <div class="m-sub">NAS CD → Rubrik Cloud Vault</div>
+      </div>
+
+      <div class="node-bar">
+        <div class="nb-label">Source RSV Appliances</div>
+        <div class="nb-value"><span id="statNodes">0</span></div>
+        <div class="nb-breakdown">
+          <span>@ <span id="statNodeSize">150</span> TB usable</span>
+          <span>· <span id="statHeadroom">20</span>% headroom</span>
+        </div>
+      </div>
+      <div class="node-bar" style="background: linear-gradient(135deg, rgba(74,158,255,0.1), transparent); border-color: var(--blue);">
+        <div class="nb-label" style="color: var(--blue);">Target RSV Appliances</div>
+        <div class="nb-value"><span id="statNodesTarget">0</span></div>
+        <div class="nb-breakdown">
+          <span>Replication target</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<script>
+// ============================================================
+// WORKLOAD CATALOG — sourced from Rubrik Security Cloud User Guide
+// Defaults for reduction and change rate are typical starting points
+// ============================================================
+const WORKLOAD_CATALOG = {
+  onprem: {
+    panels: [
+      {
+        title: 'Data Center Workloads',
+        items: [
+          { id: 'vsphere', name: 'vSphere Virtual Machines', defaultReduction: 3.0, defaultChange: 3 },
+          { id: 'hyperv', name: 'Hyper-V Virtual Machines', defaultReduction: 3.0, defaultChange: 3 },
+          { id: 'ahv', name: 'Nutanix AHV Virtual Machines', defaultReduction: 3.0, defaultChange: 3 },
+          { id: 'proxmox', name: 'Proxmox Virtual Machines', defaultReduction: 3.0, defaultChange: 3 },
+          { id: 'openstack', name: 'OpenStack Virtual Machines', defaultReduction: 3.0, defaultChange: 3 },
+          { id: 'olvm', name: 'Oracle Linux Virt Manager VMs', defaultReduction: 3.0, defaultChange: 3 },
+          { id: 'vmc', name: 'VMware Cloud (VMC)', defaultReduction: 3.0, defaultChange: 3 },
+          { id: 'vcd', name: 'VMware Cloud Director vApps', defaultReduction: 3.0, defaultChange: 3 },
+          { id: 'filesystems', name: 'File Systems (Linux / Windows)', defaultReduction: 2.5, defaultChange: 2 },
+          { id: 'windowsvg', name: 'Windows Volume Groups', defaultReduction: 2.5, defaultChange: 2 },
+          { id: 'exchange', name: 'Microsoft Exchange Server', defaultReduction: 2.2, defaultChange: 5 }
+        ]
+      },
+      {
+        title: 'Database Workloads',
+        items: [
+          { id: 'mssql', name: 'Microsoft SQL Server', defaultReduction: 4.0, defaultChange: 5 },
+          { id: 'oracle', name: 'Oracle Databases', defaultReduction: 4.0, defaultChange: 5 },
+          { id: 'saphana', name: 'SAP HANA Databases', defaultReduction: 3.5, defaultChange: 5 },
+          { id: 'db2', name: 'IBM Db2', defaultReduction: 4.0, defaultChange: 5 },
+          { id: 'informix', name: 'IBM Informix', defaultReduction: 3.5, defaultChange: 5 },
+          { id: 'mongodb', name: 'MongoDB', defaultReduction: 2.5, defaultChange: 5 },
+          { id: 'mysql', name: 'MySQL', defaultReduction: 3.5, defaultChange: 5 },
+          { id: 'postgres', name: 'PostgreSQL', defaultReduction: 3.5, defaultChange: 5 }
+        ]
+      },
+      {
+        title: 'Storage Workloads',
+        items: [
+          { id: 'nas', name: 'NAS Systems', defaultReduction: 2.0, defaultChange: 2, canCloudDirect: true },
+          { id: 'nascd', name: 'NAS Cloud Direct Data Sets', defaultReduction: 2.0, defaultChange: 2, cloudDirectOnly: true },
+          { id: 'mvols', name: 'Managed Volumes (SLA MV)', defaultReduction: 2.5, defaultChange: 3 },
+          { id: 'snapmirror', name: 'NetApp SnapMirror Cloud', defaultReduction: 2.0, defaultChange: 2 }
+        ]
+      },
+      {
+        title: 'Container Workloads',
+        items: [
+          { id: 'k8s', name: 'Kubernetes Namespaces / PVs', defaultReduction: 2.5, defaultChange: 3 }
+        ]
+      }
+    ]
+  },
+  cloud: {
+    panels: [
+      {
+        title: 'Amazon Web Services',
+        items: [
+          { id: 'aws-ec2', name: 'EC2 Instances', defaultReduction: 3.0, defaultChange: 3 },
+          { id: 'aws-ebs', name: 'EBS Volumes', defaultReduction: 3.0, defaultChange: 3 },
+          { id: 'aws-s3', name: 'Amazon S3', defaultReduction: 1.5, defaultChange: 2 },
+          { id: 'aws-rds', name: 'RDS / Aurora Databases', defaultReduction: 3.5, defaultChange: 5 },
+          { id: 'aws-dynamodb', name: 'DynamoDB', defaultReduction: 2.5, defaultChange: 5 }
+        ]
+      },
+      {
+        title: 'Microsoft Azure',
+        items: [
+          { id: 'az-vm', name: 'Azure Virtual Machines', defaultReduction: 3.0, defaultChange: 3 },
+          { id: 'az-disks', name: 'Azure Managed Disks', defaultReduction: 3.0, defaultChange: 3 },
+          { id: 'az-blob', name: 'Azure Blob Storage', defaultReduction: 1.5, defaultChange: 2 },
+          { id: 'az-sql', name: 'Azure SQL', defaultReduction: 3.5, defaultChange: 5 }
+        ]
+      },
+      {
+        title: 'Google Cloud Platform',
+        items: [
+          { id: 'gcp-gce', name: 'GCE Instances', defaultReduction: 3.0, defaultChange: 3 },
+          { id: 'gcp-disks', name: 'Persistent Disks', defaultReduction: 3.0, defaultChange: 3 }
+        ]
+      },
+      {
+        title: 'Oracle Cloud Infrastructure',
+        items: [
+          { id: 'oci-compute', name: 'OCI Compute / Block Volumes', defaultReduction: 3.0, defaultChange: 3 }
+        ]
+      }
+    ]
+  },
+  saas: {
+    panels: [
+      {
+        title: 'SaaS Applications',
+        items: [
+          { id: 'm365', name: 'Microsoft 365 (Mail · OneDrive · SPO · Teams)', defaultReduction: 1.5, defaultChange: 2, saasHosted: true },
+          { id: 'm365-bs', name: 'Microsoft 365 Backup Storage', defaultReduction: 1.5, defaultChange: 2, saasHosted: true },
+          { id: 'dynamics365', name: 'Microsoft Dynamics 365', defaultReduction: 1.8, defaultChange: 3, saasHosted: true },
+          { id: 'salesforce', name: 'Salesforce Data Protection', defaultReduction: 1.8, defaultChange: 3, saasHosted: true },
+          { id: 'gws', name: 'Google Workspace', defaultReduction: 1.5, defaultChange: 2, saasHosted: true },
+          { id: 'jira', name: 'Atlassian Jira', defaultReduction: 1.8, defaultChange: 3, saasHosted: true }
+        ]
+      },
+      {
+        title: 'DevOps',
+        items: [
+          { id: 'github', name: 'GitHub Repositories', defaultReduction: 1.5, defaultChange: 3, saasHosted: true },
+          { id: 'azdevops', name: 'Azure DevOps', defaultReduction: 1.5, defaultChange: 3, saasHosted: true }
+        ]
+      }
+    ]
+  },
+  identity: {
+    panels: [
+      {
+        title: 'Identity Providers',
+        items: [
+          { id: 'ad-forest', name: 'Active Directory Forest', defaultReduction: 2.0, defaultChange: 2 },
+          { id: 'ad-dc', name: 'AD Domains / Domain Controllers', defaultReduction: 2.0, defaultChange: 2 },
+          { id: 'entra', name: 'Microsoft Entra ID', defaultReduction: 1.5, defaultChange: 2, saasHosted: true },
+          { id: 'okta', name: 'Okta IdP', defaultReduction: 1.5, defaultChange: 2, saasHosted: true }
+        ]
+      }
+    ]
+  }
+};
+
+// ============================================================
+// STATE
+// ============================================================
+const state = {
+  activeCategories: new Set(),
+  selectedWorkloads: new Map(),
+  dc1: 'Primary Data Center',
+  dc2: 'DR Data Center',
+  replicationEnabled: true,
+  frequency: 1,
+  retentionWeeks: 4,
+  replRetentionWeeks: 4,
+  nodeSize: 150,
+  headroom: 20
+};
+
+// ============================================================
+// INIT
+// ============================================================
+function init() {
+  document.querySelectorAll('.cat-btn').forEach(btn => {
+    btn.addEventListener('click', () => toggleCategory(btn.dataset.cat));
+  });
+
+  document.getElementById('dc1Name').addEventListener('input', e => { state.dc1 = e.target.value || 'Primary Data Center'; renderAll(); });
+  document.getElementById('dc2Name').addEventListener('input', e => { state.dc2 = e.target.value || 'DR Data Center'; renderAll(); });
+  document.getElementById('replicationToggle').addEventListener('click', () => {
+    state.replicationEnabled = !state.replicationEnabled;
+    document.getElementById('replicationToggle').classList.toggle('on', state.replicationEnabled);
+    renderAll();
+  });
+
+  document.getElementById('freqInput').addEventListener('input', e => { state.frequency = +e.target.value || 1; renderAll(); });
+  document.getElementById('retentionInput').addEventListener('input', e => { state.retentionWeeks = +e.target.value || 1; renderAll(); });
+  document.getElementById('replRetentionInput').addEventListener('input', e => { state.replRetentionWeeks = +e.target.value || 1; renderAll(); });
+  document.getElementById('nodeSizeInput').addEventListener('input', e => { state.nodeSize = +e.target.value || 150; renderAll(); });
+  document.getElementById('headroomInput').addEventListener('input', e => { state.headroom = +e.target.value || 0; renderAll(); });
+
+  buildWorkloadPanels();
+  renderAll();
+}
+
+// ============================================================
+// CATEGORIES & PANELS
+// ============================================================
+function toggleCategory(cat) {
+  if (state.activeCategories.has(cat)) state.activeCategories.delete(cat);
+  else state.activeCategories.add(cat);
+
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.toggle('active', state.activeCategories.has(b.dataset.cat)));
+  const panelsWrap = document.getElementById('workloadPanels');
+  panelsWrap.classList.toggle('visible', state.activeCategories.size > 0);
+  document.querySelectorAll('.workload-panel').forEach(p => {
+    p.classList.toggle('visible', state.activeCategories.has(p.dataset.cat));
+  });
+  updateCategoryCounts();
+}
+
+function updateCategoryCounts() {
+  const counts = {};
+  state.selectedWorkloads.forEach(w => { counts[w.category] = (counts[w.category] || 0) + 1; });
+  const labels = {
+    onprem: 'DATA CENTER · DB · STORAGE',
+    cloud: 'AWS · AZURE · GCP · OCI',
+    saas: 'M365 · SALESFORCE · JIRA',
+    identity: 'AD · ENTRA ID · OKTA'
+  };
+  document.querySelectorAll('.cat-btn').forEach(btn => {
+    const c = counts[btn.dataset.cat] || 0;
+    btn.querySelector('.cat-count').textContent = c > 0 ? `${c} SELECTED` : labels[btn.dataset.cat];
+  });
+}
+
+function buildWorkloadPanels() {
+  const host = document.getElementById('workloadPanels');
+  host.innerHTML = '';
+  Object.entries(WORKLOAD_CATALOG).forEach(([catId, cat]) => {
+    cat.panels.forEach(panel => {
+      const p = document.createElement('div');
+      p.className = 'workload-panel';
+      p.dataset.cat = catId;
+      p.innerHTML = `
+        <div class="panel-header">
+          <span class="dot"></span>
+          <span class="title">${panel.title}</span>
+          <span class="count">${panel.items.length} WORKLOADS</span>
+        </div>
+        <div class="workload-grid">
+          ${panel.items.map(item => `
+            <div class="wl-item" data-id="${item.id}" data-cat="${catId}">
+              <div class="wl-checkbox">
+                <svg width="9" height="9" viewBox="0 0 10 10"><polyline points="1,5 4,8 9,1" fill="none" stroke="#0a0d10" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </div>
+              <span>${item.name}</span>
+            </div>
+          `).join('')}
+        </div>
+      `;
+      host.appendChild(p);
+    });
+  });
+
+  host.querySelectorAll('.wl-item').forEach(el => {
+    el.addEventListener('click', () => toggleWorkload(el.dataset.id, el.dataset.cat));
+  });
+}
+
+function findCatalogItem(id) {
+  for (const [catId, cat] of Object.entries(WORKLOAD_CATALOG)) {
+    for (const panel of cat.panels) {
+      for (const item of panel.items) {
+        if (item.id === id) return { item, catId, panel: panel.title };
+      }
+    }
+  }
+  return null;
+}
+
+function toggleWorkload(id, catId) {
+  if (state.selectedWorkloads.has(id)) {
+    state.selectedWorkloads.delete(id);
+  } else {
+    const found = findCatalogItem(id);
+    if (!found) return;
+    const item = found.item;
+    state.selectedWorkloads.set(id, {
+      id: item.id,
+      name: item.name,
+      category: catId,
+      panel: found.panel,
+      objects: 10,
+      capacity: 10,
+      reduction: item.defaultReduction || 3.0,
+      changeRate: item.defaultChange || 3,
+      prodPct: 80,
+      cloudDirect: !!item.cloudDirectOnly,
+      canCloudDirect: !!item.canCloudDirect || !!item.cloudDirectOnly,
+      cloudDirectOnly: !!item.cloudDirectOnly,
+      saasHosted: !!item.saasHosted
+    });
+  }
+  document.querySelectorAll('.wl-item').forEach(el => {
+    el.classList.toggle('selected', state.selectedWorkloads.has(el.dataset.id));
+  });
+  updateCategoryCounts();
+  renderAll();
+}
+
+// ============================================================
+// CONFIGURED WORKLOADS
+// ============================================================
+function renderConfigured() {
+  const section = document.getElementById('configuredSection');
+  const policySection = document.getElementById('policySection');
+  const rows = document.getElementById('configuredRows');
+  const countPill = document.getElementById('configCount');
+
+  const arr = Array.from(state.selectedWorkloads.values());
+  countPill.textContent = `${arr.length} SELECTED`;
+
+  if (arr.length === 0) {
+    section.style.display = 'none';
+    policySection.style.display = 'none';
+    return;
+  }
+  section.style.display = 'block';
+  policySection.style.display = 'block';
+
+  rows.innerHTML = arr.map(w => {
+    const stored = calcWorkloadStored(w);
+    const canPickTarget = w.canCloudDirect && !w.cloudDirectOnly;
+    let targetOptions;
+    if (w.saasHosted) targetOptions = '<option>SaaS-hosted</option>';
+    else if (w.cloudDirectOnly) targetOptions = '<option>Cloud Direct</option>';
+    else if (w.canCloudDirect) {
+      targetOptions = `
+        <option value="rsv" ${!w.cloudDirect?'selected':''}>RSV Cluster</option>
+        <option value="cd" ${w.cloudDirect?'selected':''}>Cloud Direct</option>
+      `;
+    } else targetOptions = '<option>RSV Cluster</option>';
+
+    return `
+      <div class="config-row" data-id="${w.id}">
+        <div class="wl-name">
+          <span class="tag">${categoryTag(w.category)}</span>
+          <span class="name" title="${escapeHtml(w.name)}">${escapeHtml(w.name)}</span>
+        </div>
+        <div><input class="num-input" type="number" min="0" step="1" value="${w.objects}" data-field="objects" /></div>
+        <div><input class="num-input" type="number" min="0" step="0.1" value="${w.capacity}" data-field="capacity" /></div>
+        <div><input class="num-input" type="number" min="1" step="0.1" value="${w.reduction}" data-field="reduction" /></div>
+        <div><input class="num-input" type="number" min="0" step="0.1" value="${w.changeRate}" data-field="changeRate" /></div>
+        <div><input class="num-input" type="number" min="0" max="100" step="1" value="${w.prodPct}" data-field="prodPct" ${w.saasHosted?'disabled':''} /></div>
+        <div>
+          <select class="select-input" data-field="target" ${!canPickTarget?'disabled':''}>
+            ${targetOptions}
+          </select>
+        </div>
+        <div style="text-align:right; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--accent);">
+          ${stored.toFixed(2)}
+        </div>
+        <div><button class="remove-btn" data-remove="${w.id}" title="Remove">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </button></div>
+      </div>
+    `;
+  }).join('');
+
+  rows.querySelectorAll('.num-input').forEach(inp => {
+    inp.addEventListener('input', e => {
+      const id = e.target.closest('.config-row').dataset.id;
+      const field = e.target.dataset.field;
+      const w = state.selectedWorkloads.get(id);
+      if (!w) return;
+      w[field] = +e.target.value || 0;
+      renderAll();
+    });
+  });
+  rows.querySelectorAll('.select-input').forEach(sel => {
+    sel.addEventListener('change', e => {
+      const id = e.target.closest('.config-row').dataset.id;
+      const w = state.selectedWorkloads.get(id);
+      if (!w) return;
+      w.cloudDirect = e.target.value === 'cd';
+      renderAll();
+    });
+  });
+  rows.querySelectorAll('[data-remove]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      const id = e.currentTarget.dataset.remove;
+      state.selectedWorkloads.delete(id);
+      document.querySelectorAll('.wl-item').forEach(el => {
+        if (el.dataset.id === id) el.classList.remove('selected');
+      });
+      updateCategoryCounts();
+      renderAll();
+    });
+  });
+}
+
+function categoryTag(cat) {
+  return { onprem: 'ON-PREM', cloud: 'CLOUD', saas: 'SAAS', identity: 'IDENTITY' }[cat] || cat.toUpperCase();
+}
+
+// ============================================================
+// CALCULATIONS
+// firstFull = capacity / reduction
+// dailyDelta = firstFull × (changeRate / 100)
+// stored = firstFull + dailyDelta × (retentionWeeks × 7)
+// replicated = prodPct% × [firstFull + dailyDelta × (replRetentionWeeks × 7)]
+// ============================================================
+function calcWorkloadStored(w) {
+  if (w.capacity <= 0 || w.reduction <= 0) return 0;
+  const firstFull = w.capacity / w.reduction;
+  const dailyDelta = firstFull * (w.changeRate / 100);
+  const days = state.retentionWeeks * 7;
+  return firstFull + dailyDelta * days;
+}
+function calcWorkloadReplicated(w) {
+  if (w.capacity <= 0 || w.reduction <= 0) return 0;
+  if (w.saasHosted) return 0;
+  const firstFull = w.capacity / w.reduction;
+  const dailyDelta = firstFull * (w.changeRate / 100);
+  const days = state.replRetentionWeeks * 7;
+  return (w.prodPct / 100) * (firstFull + dailyDelta * days);
+}
+
+function aggregate() {
+  const arr = Array.from(state.selectedWorkloads.values());
+  let fetb = 0, firstFull = 0, stored = 0, replicated = 0, cloudDirect = 0, rsvSource = 0;
+  arr.forEach(w => {
+    fetb += w.capacity;
+    const wFirst = (w.reduction > 0) ? (w.capacity / w.reduction) : 0;
+    firstFull += wFirst;
+    const wStored = calcWorkloadStored(w);
+    stored += wStored;
+
+    if (w.saasHosted) {
+      // Protected in Rubrik's cloud; not on customer RSV
+    } else if (w.cloudDirect) {
+      cloudDirect += wStored;
+    } else {
+      rsvSource += wStored;
+    }
+
+    if (state.replicationEnabled && !w.saasHosted && !w.cloudDirect) {
+      replicated += calcWorkloadReplicated(w);
+    }
+  });
+
+  const incremental = stored - firstFull;
+  const headroomFactor = 1 / (1 - state.headroom / 100);
+  const nodesSource = rsvSource > 0 ? Math.ceil((rsvSource * headroomFactor) / state.nodeSize) : 0;
+  const nodesTarget = replicated > 0 ? Math.ceil((replicated * headroomFactor) / state.nodeSize) : 0;
+
+  return { fetb, firstFull, stored, rsvSource, replicated, cloudDirect, incremental, nodesSource, nodesTarget };
+}
+
+// ============================================================
+// SIDEBAR
+// ============================================================
+function renderSidebar() {
+  const a = aggregate();
+  document.getElementById('statFetb').textContent = a.fetb.toFixed(1);
+  document.getElementById('statFirstFull').textContent = a.firstFull.toFixed(2);
+  document.getElementById('statIncr').textContent = a.incremental.toFixed(2);
+  document.getElementById('statWeeks').textContent = state.retentionWeeks;
+  document.getElementById('statSource').textContent = a.rsvSource.toFixed(2);
+  document.getElementById('statRepl').textContent = a.replicated.toFixed(2);
+  document.getElementById('statCloudDirect').textContent = a.cloudDirect.toFixed(2);
+  document.getElementById('statNodes').textContent = a.nodesSource;
+  document.getElementById('statNodesTarget').textContent = state.replicationEnabled ? a.nodesTarget : 0;
+  document.getElementById('statNodeSize').textContent = state.nodeSize;
+  document.getElementById('statHeadroom').textContent = state.headroom;
+  document.getElementById('headerWorkloadCount').textContent = `${state.selectedWorkloads.size} WORKLOADS`;
+  document.getElementById('headerCapacity').textContent = `${a.fetb.toFixed(1)} TB FETB`;
+}
+
+// ============================================================
+// ARCHITECTURE DIAGRAM
+// ============================================================
+function renderDiagram() {
+  const canvas = document.getElementById('vizCanvas');
+  const a = aggregate();
+  const arr = Array.from(state.selectedWorkloads.values());
+  const hasWorkloads = arr.length > 0;
+
+  const W = 1200, H = 720;
+  const cx = W / 2;
+
+  const onpremWLs = arr.filter(w => (w.category === 'onprem' || w.category === 'identity') && !w.saasHosted && !w.cloudDirect);
+  const cloudWLs = arr.filter(w => w.category === 'cloud');
+  const saasWLs = arr.filter(w => w.saasHosted);
+  const cloudDirectWLs = arr.filter(w => w.cloudDirect);
+
+  const hasReplication = state.replicationEnabled && a.replicated > 0;
+  const hasCloudDirect = a.cloudDirect > 0;
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" style="min-height:560px;">`;
+
+  svg += `
+    <defs>
+      <marker id="arrow-accent" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+        <path d="M0,0 L10,5 L0,10 z" fill="#00b388"/>
+      </marker>
+      <marker id="arrow-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+        <path d="M0,0 L10,5 L0,10 z" fill="#4a9eff"/>
+      </marker>
+      <marker id="arrow-purple" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+        <path d="M0,0 L10,5 L0,10 z" fill="#a78bfa"/>
+      </marker>
+      <marker id="arrow-pink" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+        <path d="M0,0 L10,5 L0,10 z" fill="#ec4899"/>
+      </marker>
+      <filter id="glow"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    </defs>
+  `;
+
+  // === RSC SaaS Control Plane (top center) ===
+  const rscX = cx - 160, rscY = 20, rscW = 320, rscH = 74;
+  svg += `
+    <g>
+      <rect x="${rscX}" y="${rscY}" width="${rscW}" height="${rscH}" rx="8" fill="#151b21" stroke="#00b388" stroke-width="1.5" filter="url(#glow)"/>
+      <text x="${cx}" y="${rscY + 28}" text-anchor="middle" class="node-text" style="font-size: 14px; font-weight:600; fill: #00b388;">Rubrik Security Cloud</text>
+      <text x="${cx}" y="${rscY + 46}" text-anchor="middle" class="node-sub">SAAS MANAGEMENT PLANE · HOSTED BY RUBRIK</text>
+      <text x="${cx}" y="${rscY + 62}" text-anchor="middle" class="node-sub" style="fill: #aab3ba;">${state.selectedWorkloads.size} workload type${state.selectedWorkloads.size===1?'':'s'} · global SLA domains</text>
+    </g>
+  `;
+
+  if (!hasWorkloads) {
+    svg += `
+      <g>
+        <text x="${cx}" y="${H/2 + 40}" text-anchor="middle" style="font-family: 'Instrument Serif', serif; font-size: 22px; fill: #6b747c;">Select workloads to generate the topology</text>
+        <text x="${cx}" y="${H/2 + 68}" text-anchor="middle" class="dc-label-text" style="font-size: 10px;">DATA CENTERS · RSV CLUSTERS · WORKLOAD SOURCES · REPLICATION</text>
+      </g>
+    `;
+    svg += `</svg>`;
+    canvas.innerHTML = svg;
+    return;
+  }
+
+  // === Data Center 1 (left) ===
+  const dcW = hasReplication ? 500 : 680;
+  const dcH = 460;
+  const dc1X = 40, dc1Y = 180;
+  svg += dcGroup(dc1X, dc1Y, dcW, dcH, 'source', state.dc1, 'SITE 01 · SOURCE', a.nodesSource, a.rsvSource, onpremWLs, true, rscX, rscY, rscW, rscH);
+
+  // === Data Center 2 (right, target) ===
+  if (hasReplication) {
+    const dc2X = W - 40 - dcW;
+    const dc2Y = 180;
+    svg += dcGroup(dc2X, dc2Y, dcW, dcH, 'target', state.dc2, 'SITE 02 · REPLICATION TARGET', a.nodesTarget, a.replicated, [], false, rscX, rscY, rscW, rscH);
+
+    // Replication line between sites
+    const replStartX = dc1X + dcW;
+    const replEndX = dc2X;
+    const replY = dc1Y + 240;
+    svg += `
+      <g>
+        <path d="M${replStartX} ${replY} L${replEndX} ${replY}" class="connector replication" marker-end="url(#arrow-blue)"/>
+        <rect x="${(replStartX + replEndX)/2 - 70}" y="${replY - 14}" width="140" height="28" rx="4" fill="#151b21" stroke="#4a9eff" stroke-opacity="0.5" stroke-width="1"/>
+        <text x="${(replStartX + replEndX)/2}" y="${replY + 4}" text-anchor="middle" class="conn-label" style="fill:#4a9eff;">REPLICATION · ${state.replRetentionWeeks}w RETENTION</text>
+      </g>
+    `;
+  }
+
+  // === Cloud Workloads bubble (top left) ===
+  if (cloudWLs.length > 0) {
+    const cbX = 50, cbY = 105, cbW = 240, cbH = 50;
+    const cloudNames = cloudWLs.slice(0, 3).map(w => w.name.split(' ')[0]).join(', ') + (cloudWLs.length > 3 ? '…' : '');
+    svg += `
+      <g>
+        <rect x="${cbX}" y="${cbY}" width="${cbW}" height="${cbH}" rx="24" fill="#151b21" stroke="#a78bfa" stroke-width="1.5"/>
+        <text x="${cbX + cbW/2}" y="${cbY + 22}" text-anchor="middle" class="node-text" style="fill:#a78bfa; font-weight:600;">☁ Cloud Workloads</text>
+        <text x="${cbX + cbW/2}" y="${cbY + 38}" text-anchor="middle" class="node-sub">${cloudWLs.length} type${cloudWLs.length===1?'':'s'} · protected natively</text>
+      </g>
+      <path d="M${cbX + cbW/2} ${cbY} L${rscX + 40} ${rscY + rscH}" class="connector active" style="stroke:#a78bfa" stroke-dasharray="3,3" marker-end="url(#arrow-purple)"/>
+    `;
+  }
+
+  // === SaaS Workloads bubble (top right) ===
+  if (saasWLs.length > 0) {
+    const sbX = W - 50 - 240, sbY = 105, sbW = 240, sbH = 50;
+    svg += `
+      <g>
+        <rect x="${sbX}" y="${sbY}" width="${sbW}" height="${sbH}" rx="6" fill="#151b21" stroke="#ec4899" stroke-width="1.5"/>
+        <text x="${sbX + sbW/2}" y="${sbY + 22}" text-anchor="middle" class="node-text" style="fill:#ec4899; font-weight:600;">⌘ SaaS Applications</text>
+        <text x="${sbX + sbW/2}" y="${sbY + 38}" text-anchor="middle" class="node-sub">${saasWLs.length} application${saasWLs.length===1?'':'s'} · protected by RSC</text>
+      </g>
+      <path d="M${sbX + sbW/2} ${sbY} L${rscX + rscW - 40} ${rscY + rscH}" class="connector active" style="stroke:#ec4899" stroke-dasharray="3,3" marker-end="url(#arrow-pink)"/>
+    `;
+  }
+
+  // === Rubrik Cloud Vault (RCV) for Cloud Direct (NAS CD) ===
+  if (hasCloudDirect) {
+    const cdW = 260, cdH = 54;
+    const cdX = cx - cdW/2, cdY = H - 80;
+    svg += `
+      <g>
+        <rect x="${cdX}" y="${cdY}" width="${cdW}" height="${cdH}" rx="6" fill="#151b21" stroke="#a78bfa" stroke-width="1.5"/>
+        <text x="${cdX + cdW/2}" y="${cdY + 22}" text-anchor="middle" class="node-text" style="fill:#a78bfa; font-weight:600;">Rubrik Cloud Vault (RCV)</text>
+        <text x="${cdX + cdW/2}" y="${cdY + 40}" text-anchor="middle" class="node-sub">NAS CLOUD DIRECT · ${a.cloudDirect.toFixed(1)} TB STORED</text>
+      </g>
+    `;
+    // Virtual data mover from DC1 bypassing the RSV cluster
+    const startX = dc1X + dcW/2, startY = dc1Y + dcH;
+    const endX = cdX + 20, endY = cdY + cdH/2;
+    svg += `
+      <g>
+        <path d="M${startX} ${startY} Q${startX} ${H-50} ${endX} ${endY}" class="connector cloud-direct" marker-end="url(#arrow-purple)"/>
+        <rect x="${startX - 75}" y="${startY + 14}" width="150" height="22" rx="3" fill="#151b21" stroke="#a78bfa" stroke-opacity="0.5"/>
+        <text x="${startX}" y="${startY + 29}" text-anchor="middle" class="conn-label" style="fill:#a78bfa;">VIRTUAL DATA MOVER</text>
+      </g>
+    `;
+  }
+
+  svg += `</svg>`;
+  canvas.innerHTML = svg;
+}
+
+function dcGroup(x, y, w, h, kind, name, label, nodes, storedTB, workloads, isSource, rscX, rscY, rscW, rscH) {
+  const isSrc = kind === 'source';
+  const strokeCol = isSrc ? '#00b388' : '#4a9eff';
+  const markerId = isSrc ? 'arrow-accent' : 'arrow-blue';
+  const connectorClass = isSrc ? 'connector active' : 'connector replication';
+
+  const nodeCount = Math.max(nodes, 0);
+  const maxDisplayNodes = 6;
+  const displayNodes = Math.min(nodeCount, maxDisplayNodes);
+  const nodeW = 62, nodeH = 46, nodeGap = 10;
+  const clusterW = displayNodes * nodeW + Math.max(0, displayNodes - 1) * nodeGap;
+  const clusterStartX = x + (w - clusterW) / 2;
+  const clusterY = y + h - 100;
+
+  let nodesSvg = '';
+  if (nodeCount > 0) {
+    for (let i = 0; i < displayNodes; i++) {
+      const nx = clusterStartX + i * (nodeW + nodeGap);
+      nodesSvg += `
+        <g>
+          <rect x="${nx}" y="${clusterY}" width="${nodeW}" height="${nodeH}" rx="3" fill="#1c242c" stroke="${strokeCol}" stroke-width="1.5"/>
+          <rect x="${nx + 6}" y="${clusterY + 8}" width="${nodeW-12}" height="3" rx="1" fill="${strokeCol}" opacity="0.7"/>
+          <rect x="${nx + 6}" y="${clusterY + 15}" width="${nodeW-12}" height="3" rx="1" fill="${strokeCol}" opacity="0.4"/>
+          <rect x="${nx + 6}" y="${clusterY + 22}" width="${nodeW-12}" height="3" rx="1" fill="${strokeCol}" opacity="0.4"/>
+          <rect x="${nx + 6}" y="${clusterY + 29}" width="${nodeW-12}" height="3" rx="1" fill="${strokeCol}" opacity="0.4"/>
+          <circle cx="${nx + 10}" cy="${clusterY + nodeH - 7}" r="1.8" fill="#1ad6a5"/>
+        </g>
+      `;
+    }
+    if (nodeCount > maxDisplayNodes) {
+      nodesSvg += `<text x="${clusterStartX + clusterW + 14}" y="${clusterY + nodeH/2 + 4}" class="node-sub" style="font-size:12px; fill:${strokeCol};">+${nodeCount - maxDisplayNodes}</text>`;
+    }
+  } else {
+    nodesSvg = `<text x="${x + w/2}" y="${clusterY + 28}" text-anchor="middle" class="node-sub" style="fill:#4a5159;">— No RSV capacity required —</text>`;
+  }
+
+  // Workload source chips inside DC (top region)
+  let chipsSvg = '';
+  if (isSource && workloads.length > 0) {
+    const chipH = 24, chipGap = 6;
+    const chipsPerRow = 3;
+    const chipAreaW = w - 40;
+    const chipW = (chipAreaW - (chipsPerRow - 1) * chipGap) / chipsPerRow;
+    const maxDisplay = 9;
+    workloads.slice(0, maxDisplay).forEach((wl, i) => {
+      const row = Math.floor(i / chipsPerRow);
+      const col = i % chipsPerRow;
+      const cx2 = x + 20 + col * (chipW + chipGap);
+      const cy2 = y + 64 + row * (chipH + chipGap);
+      const displayName = wl.name.length > 26 ? wl.name.substring(0,24) + '…' : wl.name;
+      chipsSvg += `
+        <g>
+          <rect x="${cx2}" y="${cy2}" width="${chipW}" height="${chipH}" rx="3" fill="#151b21" stroke="#2d373f"/>
+          <circle cx="${cx2 + 10}" cy="${cy2 + chipH/2}" r="3" fill="#00b388"/>
+          <text x="${cx2 + 20}" y="${cy2 + chipH/2 + 4}" class="wl-chip-text">${escapeSvg(displayName)}</text>
+        </g>
+      `;
+    });
+    if (workloads.length > maxDisplay) {
+      const lastY = y + 64 + Math.ceil(maxDisplay / chipsPerRow) * (chipH + chipGap);
+      chipsSvg += `<text x="${x + w/2}" y="${lastY + 4}" text-anchor="middle" class="node-sub" style="fill:#aab3ba;">+${workloads.length - maxDisplay} more workloads</text>`;
+    }
+  } else if (!isSource) {
+    // Target DC: show label indicating it receives replicated data
+    chipsSvg = `
+      <g>
+        <text x="${x + w/2}" y="${y + 100}" text-anchor="middle" class="dc-label-text" style="font-size:11px; fill:#aab3ba;">RECEIVES REPLICATED SNAPSHOTS</text>
+        <text x="${x + w/2}" y="${y + 120}" text-anchor="middle" class="node-sub">FROM SITE 01 SOURCE · PRODUCTION WORKLOADS</text>
+      </g>
+    `;
+  }
+
+  // Connector from workload region to RSV cluster
+  let innerConnector = '';
+  if (isSource && workloads.length > 0 && nodeCount > 0) {
+    innerConnector = `<path d="M${x + w/2} ${y + 180} L${x + w/2} ${clusterY - 6}" class="connector active" marker-end="url(#arrow-accent)"/>`;
+  }
+
+  // HTTPS 443 outbound from RSV cluster UP to RSC
+  let httpsPath = '';
+  if (nodeCount > 0) {
+    const rscAnchorX = isSrc ? (rscX + 60) : (rscX + rscW - 60);
+    const rscAnchorY = rscY + rscH;
+    const clusterTopX = x + w/2;
+    const clusterTopY = clusterY;
+    httpsPath = `
+      <g>
+        <path d="M${clusterTopX} ${clusterTopY - 4} Q${clusterTopX} ${y - 10} ${(clusterTopX + rscAnchorX)/2} ${y - 40} T${rscAnchorX} ${rscAnchorY}" class="${connectorClass}" marker-end="url(#${markerId})" fill="none"/>
+        <rect x="${clusterTopX - 48}" y="${y + 4}" width="96" height="20" rx="3" fill="#0a0d10" stroke="${strokeCol}" stroke-opacity="0.6"/>
+        <text x="${clusterTopX}" y="${y + 17}" text-anchor="middle" class="conn-label" style="fill:${strokeCol};">HTTPS 443 OUT</text>
+      </g>
+    `;
+  }
+
+  return `
+    <g>
+      <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="8" fill="#151b21" stroke="${strokeCol}" stroke-opacity="0.5" stroke-width="1"/>
+      <text x="${x + 20}" y="${y + 28}" class="dc-label-text" style="fill:${strokeCol};">${label}</text>
+      <text x="${x + 20}" y="${y + 52}" class="dc-title-text">${escapeSvg(name)}</text>
+      <text x="${x + w - 20}" y="${y + 28}" text-anchor="end" class="dc-label-text" style="fill:${strokeCol};">${storedTB.toFixed(1)} TB · ${nodeCount} APPLIANCE${nodeCount===1?'':'S'}</text>
+      ${chipsSvg}
+      ${innerConnector}
+      ${nodesSvg}
+      <text x="${x + w/2}" y="${clusterY + nodeH + 20}" text-anchor="middle" class="node-sub" style="font-size:10px;">RUBRIK SECURE VAULT (RSV) CLUSTER · ${state.nodeSize} TB USABLE / APPLIANCE</text>
+      ${httpsPath}
+    </g>
+  `;
+}
+
+function escapeSvg(s) { return String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[c]); }
+function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
+
+// ============================================================
+// EXPORT
+// ============================================================
+function exportSVG() {
+  const svgEl = document.querySelector('#vizCanvas svg');
+  if (!svgEl) return;
+  const clone = svgEl.cloneNode(true);
+  const style = document.createElement('style');
+  style.textContent = `
+    text { font-family: -apple-system, system-ui, sans-serif; }
+    .node-text { fill: #e8ecef; font-weight: 500; }
+    .node-sub { fill: #6b747c; font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: .5px; }
+    .dc-title-text { fill: #e8ecef; font-family: 'Instrument Serif', serif; font-size: 18px; }
+    .dc-label-text { fill: #6b747c; font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 1.5px; }
+    .wl-chip-text { fill: #e8ecef; font-size: 10px; }
+    .connector { stroke: #2d373f; fill: none; }
+    .connector.active { stroke: #00b388; stroke-dasharray: 3,3; }
+    .connector.replication { stroke: #4a9eff; stroke-dasharray: 4,4; }
+    .connector.cloud-direct { stroke: #a78bfa; stroke-dasharray: 3,3; }
+    .conn-label { fill: #6b747c; font-family: 'JetBrains Mono', monospace; font-size: 8.5px; letter-spacing: .5px; }
+  `;
+  clone.insertBefore(style, clone.firstChild);
+  clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+  clone.style.background = '#0a0d10';
+  const serialized = new XMLSerializer().serializeToString(clone);
+  const blob = new Blob(['<?xml version="1.0" encoding="UTF-8"?>\n' + serialized], { type: 'image/svg+xml' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'rubrik-sizing-topology.svg';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ============================================================
+// MASTER RENDER
+// ============================================================
+function renderAll() {
+  renderConfigured();
+  renderSidebar();
+  renderDiagram();
+}
+
+init();
+</script>
+</body>
+</html>
